@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { Icon, LatLng } from 'leaflet';
 import { Lebz, getUserColor, isValidatingLebz, ValidatedCountry } from '../lib/supabase';
+import CountryLayer from './CountryLayer';
 import 'leaflet/dist/leaflet.css';
 
 // Créer des icônes colorées pour les utilisateurs
@@ -57,9 +58,10 @@ type MapProps = {
   center?: [number, number];
   zoom?: number;
   validatedCountries?: ValidatedCountry[];
+  showCountries?: boolean;
 };
 
-export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2137], zoom = 3, validatedCountries = [] }: MapProps) {
+export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2137], zoom = 3, validatedCountries = [], showCountries = false }: MapProps) {
   const renderStars = (rating: number) => {
     return '★'.repeat(rating) + '☆'.repeat(5 - rating);
   };
@@ -75,6 +77,9 @@ export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      
+      {showCountries && <CountryLayer validatedCountries={validatedCountries} />}
+      
       {onLocationSelect && <LocationMarker onLocationSelect={onLocationSelect} />}
       {lebzList.map((lebz) => {
         const userColor = getUserColor(lebz.user_id);

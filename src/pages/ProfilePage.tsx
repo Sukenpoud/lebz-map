@@ -169,8 +169,9 @@ export default function ProfilePage() {
               <Map 
                 lebzList={lebzList} 
                 validatedCountries={validatedCountries}
+                showCountries={true}
                 center={lebzList[0] ? [lebzList[0].latitude, lebzList[0].longitude] : [46.2276, 2.2137]}
-                zoom={3}
+                zoom={4}
               />
             </div>
           </div>
