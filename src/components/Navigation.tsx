@@ -28,6 +28,14 @@ export default function Navigation() {
                 Carte
               </Link>
               <Link
+                to="/add"
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isActive('/add') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                Ajouter
+              </Link>
+              <Link
                 to="/leaderboard"
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   isActive('/leaderboard') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'
