@@ -92,7 +92,7 @@ export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2
             position={[lebz.latitude, lebz.longitude]}
             icon={coloredIcon}
           >
-            <Popup maxWidth={300}>
+            <Popup maxWidth={300} className="lebz-popup">
               <div className="space-y-2">
                 {lebz.photo_url ? (
                   <img
@@ -116,16 +116,16 @@ export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2
                 
                 <h3 className="font-bold text-lg">{lebz.title}</h3>
                 {lebz.profile && (
-                  <p className="text-sm text-gray-600">Par {lebz.profile.username}</p>
+                  <p className="text-sm text-gray-600">Par <a href={`/profile/${lebz.profile.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">{lebz.profile.username}</a></p>
                 )}
                 <div className="text-sm">
-                  <p className="text-gray-700">
+                  <p className="text-gray-700 mt-0">
                     {lebz.city_name && `${lebz.city_name}, `}
                     {lebz.country_name}
                   </p>
                   <p className="text-yellow-500">{renderStars(lebz.rating)}</p>
                   <p className="text-gray-600">
-                    Visité le {new Date(lebz.visited_at).toLocaleDateString('fr-FR')}
+                    Soulagé le {new Date(lebz.visited_at).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
                 {lebz.description && (

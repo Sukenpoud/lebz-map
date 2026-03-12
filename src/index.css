@@ -27,3 +27,15 @@ body {
 .leaflet-popup-tip {
   background: white;
 }
+
+.lebz-popup .leaflet-popup-content {
+  margin: 8px;
+}
+
+.lebz-popup .leaflet-popup-content p {
+  margin: 0;
+}
+
+.lebz-popup .leaflet-popup-content h3 {
+  margin: 0;
+}
