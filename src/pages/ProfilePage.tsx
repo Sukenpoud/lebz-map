@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase, Lebz, Profile, ValidatedCountry } from '../lib/supabase';
+import { supabase, Lebz, Profile, ValidatedCountry, isValidatingLebz, getCountryFlag } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import EditLebzModal from '../components/EditLebzModal';
 import DropdownMenu, { DropdownMenuItem } from '../components/DropdownMenu';
+import Map from '../components/Map';
 
 export default function ProfilePage() {
   const { userId } = useParams();
@@ -145,15 +146,32 @@ export default function ProfilePage() {
         {validatedCountries.length > 0 && (
           <div className="bg-gray-800 rounded-xl p-6 mb-6">
             <h2 className="text-2xl font-bold text-white mb-4">Pays validés</h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {validatedCountries.map((country) => (
                 <div
                   key={country.country_code}
-                  className="bg-gray-700 px-4 py-2 rounded-lg text-white"
+                  className="bg-gray-700 px-4 py-2 rounded-lg text-white flex items-center gap-2"
                 >
-                  {country.country_name}
+                  <span className="text-xl">
+                    {getCountryFlag(country.country_code)}
+                  </span>
+                  <span>{country.country_name}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {lebzList.length > 0 && (
+          <div className="bg-gray-800 rounded-xl p-6 mb-6">
+            <h2 className="text-2xl font-bold text-white mb-4">Carte de progression</h2>
+            <div className="h-96 rounded-lg overflow-hidden">
+              <Map 
+                lebzList={lebzList} 
+                validatedCountries={validatedCountries}
+                center={lebzList[0] ? [lebzList[0].latitude, lebzList[0].longitude] : [46.2276, 2.2137]}
+                zoom={3}
+              />
             </div>
           </div>
         )}
@@ -177,6 +195,12 @@ export default function ProfilePage() {
                     alt={lebz.title}
                     className="w-full h-48 object-cover"
                   />
+                )}
+                
+                {isValidatingLebz(lebz, validatedCountries) && (
+                  <div className="absolute top-2 left-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                    1ère lebz dans ce pays
+                  </div>
                 )}
                 
                 {isOwnProfile && (

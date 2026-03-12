@@ -35,9 +35,42 @@ export type Lebz = {
 };
 
 export type ValidatedCountry = {
+  first_lebz_id: string;
   user_id: string;
   country_code: string;
   country_name: string;
+  first_city_name: string | null;
   first_visit_date: string;
-  lebz_count: number;
+  validated_at: string;
+  lebz_count_in_country: number;
+};
+
+// Utilitaires
+export const isValidatingLebz = (lebz: Lebz, validatedCountries: ValidatedCountry[]): boolean => {
+  return validatedCountries.some(vc => vc.first_lebz_id === lebz.id);
+};
+
+export const getCountryFlag = (countryCode: string): string => {
+  if (!countryCode || countryCode.length !== 2) return '';
+  
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  
+  return String.fromCodePoint(...codePoints);
+};
+
+export const getUserColor = (userId: string): string => {
+  const colors = [
+    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+    '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'
+  ];
+  
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  return colors[Math.abs(hash) % colors.length];
 };
