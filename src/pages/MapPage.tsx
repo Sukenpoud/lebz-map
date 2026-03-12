@@ -50,8 +50,12 @@ export default function MapPage() {
   }
 
   return (
-    <div className="h-screen w-full">
-      <Map lebzList={lebzList} validatedCountries={validatedCountries} />
+    <div className="h-screen bg-gray-900">
+      <Map 
+        lebzList={lebzList} 
+        validatedCountries={validatedCountries}
+        enableMapClick={true} 
+      />
     </div>
   );
 }

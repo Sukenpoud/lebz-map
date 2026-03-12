@@ -1,10 +1,101 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { Icon, LatLng } from 'leaflet';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Lebz, getUserColor, isValidatingLebz, ValidatedCountry } from '../lib/supabase';
 import CountryLayer from './CountryLayer';
 import 'leaflet/dist/leaflet.css';
+
+// Bouton flottant pour ajouter une lebz
+function FloatingAddButton() {
+  return (
+    <Link
+      to="/add"
+      className="fixed bottom-6 right-6 z-[1000] w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 md:bottom-8 md:right-8"
+      title="Ajouter une lebz"
+    >
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    </Link>
+  );
+}
+
+// Composant pour gérer les clics sur la carte
+function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click: (e) => {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+// Composant pour le marker temporaire et le bouton d'action
+function TemporaryMarker({ position, onConfirm, onCancel }: { 
+  position: [number, number]; 
+  onConfirm: () => void; 
+  onCancel: () => void; 
+}) {
+  const tempIcon = new Icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#3B82F6" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5S25 25 25 12.5C25 5.6 19.4 0 12.5 0z"/>
+        <circle fill="white" cx="12.5" cy="12.5" r="4"/>
+      </svg>
+    `),
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+  });
+
+  const markerRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Ouvrir le popup automatiquement quand le marker est ajouté ou déplacé
+    if (markerRef.current) {
+      setTimeout(() => {
+        if (markerRef.current) {
+          markerRef.current.openPopup();
+        }
+      }, 100);
+    }
+  }, [position]);
+
+  return (
+    <Marker 
+      ref={markerRef}
+      position={position} 
+      icon={tempIcon}
+    >
+      <Popup maxWidth={200} className="temp-marker-popup" autoClose={false}>
+        <div className="text-center space-y-3">
+          <p className="text-sm font-medium text-gray-700">Ajouter une lebz ici ?</p>
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onConfirm();
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
+            >
+              Ajouter
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel();
+              }}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </Popup>
+    </Marker>
+  );
+}
 
 // Créer des icônes colorées pour les utilisateurs
 const createColoredIcon = (color: string) => new Icon({
@@ -60,11 +151,44 @@ type MapProps = {
   zoom?: number;
   validatedCountries?: ValidatedCountry[];
   showCountries?: boolean;
+  enableMapClick?: boolean; // Nouvelle prop pour activer le clic sur la carte
 };
 
-export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2137], zoom = 3, validatedCountries = [], showCountries = false }: MapProps) {
+export default function Map({ 
+  lebzList, 
+  onLocationSelect, 
+  center = [46.2276, 2.2137], 
+  zoom = 3, 
+  validatedCountries = [], 
+  showCountries = false,
+  enableMapClick = false // Par défaut, désactivé sauf sur la page principale
+}: MapProps) {
+  const navigate = useNavigate();
+  const [tempMarkerPosition, setTempMarkerPosition] = useState<[number, number] | null>(null);
+  const [showTempMarker, setShowTempMarker] = useState(false);
+
   const renderStars = (rating: number) => {
     return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+  };
+
+  const handleMapClick = (lat: number, lng: number) => {
+    if (enableMapClick) {
+      setTempMarkerPosition([lat, lng]);
+      setShowTempMarker(true);
+    }
+  };
+
+  const handleConfirmAdd = () => {
+    if (tempMarkerPosition) {
+      navigate(`/add?lat=${tempMarkerPosition[0]}&lng=${tempMarkerPosition[1]}`);
+      setShowTempMarker(false);
+      setTempMarkerPosition(null);
+    }
+  };
+
+  const handleCancelAdd = () => {
+    setShowTempMarker(false);
+    setTempMarkerPosition(null);
   };
 
   return (
@@ -81,7 +205,20 @@ export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2
       
       {showCountries && <CountryLayer validatedCountries={validatedCountries} />}
       
+      {enableMapClick && <MapClickHandler onLocationSelect={handleMapClick} />}
+      
+      {showTempMarker && tempMarkerPosition && (
+        <TemporaryMarker 
+          position={tempMarkerPosition} 
+          onConfirm={handleConfirmAdd} 
+          onCancel={handleCancelAdd} 
+        />
+      )}
+      
       {onLocationSelect && <LocationMarker onLocationSelect={onLocationSelect} />}
+      
+      {enableMapClick && <FloatingAddButton />}
+      
       {lebzList.map((lebz) => {
         const userColor = getUserColor(lebz.user_id);
         const coloredIcon = createColoredIcon(userColor);

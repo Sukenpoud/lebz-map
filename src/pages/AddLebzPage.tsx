@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import Map from '../components/Map';
@@ -7,6 +7,7 @@ import Map from '../components/Map';
 export default function AddLebzPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [rating, setRating] = useState(5);
@@ -21,6 +22,17 @@ export default function AddLebzPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [useGeolocation, setUseGeolocation] = useState(false);
+
+  // Lire les coordonnées depuis les query params au chargement
+  useEffect(() => {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    
+    if (lat && lng) {
+      setLatitude(parseFloat(lat));
+      setLongitude(parseFloat(lng));
+    }
+  }, [searchParams]);
 
   // Image compression utility
   const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> => {

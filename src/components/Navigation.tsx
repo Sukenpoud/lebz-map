@@ -28,14 +28,6 @@ export default function Navigation() {
                 Carte
               </Link>
               <Link
-                to="/add"
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isActive('/add') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                Ajouter
-              </Link>
-              <Link
                 to="/leaderboard"
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   isActive('/leaderboard') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white'
@@ -63,7 +55,7 @@ export default function Navigation() {
       </nav>
 
       <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 md:hidden z-50">
-        <div className="grid grid-cols-4 h-16">
+        <div className="grid grid-cols-3 h-16">
           <Link
             to="/"
             className={`flex flex-col items-center justify-center ${
@@ -74,17 +66,6 @@ export default function Navigation() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
             <span className="text-xs mt-1">Carte</span>
-          </Link>
-          <Link
-            to="/add"
-            className={`flex flex-col items-center justify-center ${
-              isActive('/add') ? 'text-blue-400' : 'text-gray-400'
-            }`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="text-xs mt-1">Ajouter</span>
           </Link>
           <Link
             to="/leaderboard"
