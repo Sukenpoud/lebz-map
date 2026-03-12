@@ -11,11 +11,11 @@ function FloatingAddButton() {
   return (
     <Link
       to="/add"
-      className="fixed bottom-6 right-6 z-[1000] w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 md:bottom-8 md:right-8"
+      className="absolute bottom-8 right-6 z-[1000] w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 md:bottom-8 md:right-8"
       title="Ajouter une lebz"
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        <path strokeLinecap="round" stroke="#FFFFFF" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
       </svg>
     </Link>
   );
@@ -192,12 +192,13 @@ export default function Map({
   };
 
   return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      className="z-0"
-    >
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+        className="z-0"
+      >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -275,5 +276,6 @@ export default function Map({
         );
       })}
     </MapContainer>
+    </div>
   );
 }

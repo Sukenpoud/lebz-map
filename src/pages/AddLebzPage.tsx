@@ -209,11 +209,10 @@ export default function AddLebzPage() {
 
   // Rest of the component remains the same...
   return (
-    <div className="min-h-screen bg-gray-900 pb-20">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-3xl font-bold text-white mb-6">Ajouter une lebz</h1>
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      <h1 className="text-3xl font-bold text-white mb-6">Ajouter une lebz</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg">
               {error}
@@ -361,6 +360,5 @@ export default function AddLebzPage() {
           </button>
         </form>
       </div>
-    </div>
   );
 }

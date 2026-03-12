@@ -43,19 +43,19 @@ export default function MapPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-900">
+      <div className="h-full flex items-center justify-center">
         <div className="text-white text-xl">Chargement de la carte...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gray-900">
-      <Map 
-        lebzList={lebzList} 
-        validatedCountries={validatedCountries}
-        enableMapClick={true} 
-      />
-    </div>
+    <>
+    <Map 
+      lebzList={lebzList} 
+      validatedCountries={validatedCountries}
+      enableMapClick={true} 
+    />
+    </>
   );
 }

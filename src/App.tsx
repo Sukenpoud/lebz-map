@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Navigation from './components/Navigation';
+import Layout from './components/Layout';
 import AuthPage from './pages/AuthPage';
 import MapPage from './pages/MapPage';
 import AddLebzPage from './pages/AddLebzPage';
 import ProfilePage from './pages/ProfilePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, fullHeight = false }: { children: React.ReactNode; fullHeight?: boolean }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -22,7 +22,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
-  return <>{children}</>;
+  return <Layout fullHeight={fullHeight}>{children}</Layout>;
 }
 
 function AppRoutes() {
@@ -38,7 +38,6 @@ function AppRoutes() {
 
   return (
     <>
-      <Navigation />
       <Routes>
         <Route
           path="/auth"
@@ -47,7 +46,7 @@ function AppRoutes() {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute fullHeight={true}>
               <MapPage />
             </ProtectedRoute>
           }
