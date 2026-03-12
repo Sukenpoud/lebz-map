@@ -22,6 +22,50 @@ export default function AddLebzPage() {
   const [error, setError] = useState('');
   const [useGeolocation, setUseGeolocation] = useState(false);
 
+  // Image compression utility
+  const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file); // Fallback to original if compression fails
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   useEffect(() => {
     if (useGeolocation && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -67,75 +111,91 @@ export default function AddLebzPage() {
     reverseGeocode(lat, lng);
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPhoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Compress the image
+        const compressedFile = await compressImage(file);
+        setPhoto(compressedFile);
+        
+        // Generate preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        // Fallback to original file if compression fails
+        setPhoto(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!user) return;
-  if (latitude === null || longitude === null) {
-    setError('Veuillez sélectionner un emplacement');
-    return;
-  }
- 
-  setLoading(true);
-  setError('');
- 
-  try {
-    let photoUrl: string | null = null;
-    
-    if (photo) {
-      const fileExt = photo.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
- 
-      const { error: uploadError } = await supabase.storage
-        .from('lebz-photos')
-        .upload(fileName, photo);
- 
-      if (uploadError) throw uploadError;
- 
-      const { data: { publicUrl } } = supabase.storage
-        .from('lebz-photos')
-        .getPublicUrl(fileName);
-      
-      photoUrl = publicUrl;
+    e.preventDefault();
+    if (!user) return;
+    if (latitude === null || longitude === null) {
+      setError('Veuillez sélectionner un emplacement');
+      return;
     }
- 
-    const { error: insertError } = await supabase
-      .from('lebz')
-      .insert({
-        user_id: user.id,
-        title,
-        description: description || null,
-        rating,
-        latitude,
-        longitude,
-        city_name: cityName || null,
-        country_code: countryCode || null,
-        country_name: countryName || null,
-        photo_url: photoUrl,
-        visited_at: visitedAt,
-      });
- 
-    if (insertError) throw insertError;
- 
-    navigate('/');
-  } catch (err: any) {
-    setError(err.message || 'Une erreur est survenue');
-  } finally {
-    setLoading(false);
-  }
-};
 
+    setLoading(true);
+    setError('');
+
+    try {
+      let photoUrl: string | null = null;
+      
+      if (photo) {
+        const fileExt = photo.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('lebz-photos')
+          .upload(fileName, photo);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('lebz-photos')
+          .getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+      }
+
+      const { error: insertError } = await supabase
+        .from('lebz')
+        .insert({
+          user_id: user.id,
+          title,
+          description: description || null,
+          rating,
+          latitude,
+          longitude,
+          city_name: cityName || null,
+          country_code: countryCode || null,
+          country_name: countryName || null,
+          photo_url: photoUrl,
+          visited_at: visitedAt,
+        });
+
+      if (insertError) throw insertError;
+
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Rest of the component remains the same...
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
