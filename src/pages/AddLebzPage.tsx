@@ -80,59 +80,61 @@ export default function AddLebzPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    if (!photo) {
-      setError('Une photo est requise');
-      return;
-    }
-    if (latitude === null || longitude === null) {
-      setError('Veuillez sélectionner un emplacement');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
+  e.preventDefault();
+  if (!user) return;
+  if (latitude === null || longitude === null) {
+    setError('Veuillez sélectionner un emplacement');
+    return;
+  }
+ 
+  setLoading(true);
+  setError('');
+ 
+  try {
+    let photoUrl: string | null = null;
+    
+    if (photo) {
       const fileExt = photo.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
+ 
       const { error: uploadError } = await supabase.storage
         .from('lebz-photos')
         .upload(fileName, photo);
-
+ 
       if (uploadError) throw uploadError;
-
+ 
       const { data: { publicUrl } } = supabase.storage
         .from('lebz-photos')
         .getPublicUrl(fileName);
-
-      const { error: insertError } = await supabase
-        .from('lebz')
-        .insert({
-          user_id: user.id,
-          title,
-          description: description || null,
-          rating,
-          latitude,
-          longitude,
-          city_name: cityName || null,
-          country_code: countryCode || null,
-          country_name: countryName || null,
-          photo_url: publicUrl,
-          visited_at: visitedAt,
-        });
-
-      if (insertError) throw insertError;
-
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
-    } finally {
-      setLoading(false);
+      
+      photoUrl = publicUrl;
     }
-  };
+ 
+    const { error: insertError } = await supabase
+      .from('lebz')
+      .insert({
+        user_id: user.id,
+        title,
+        description: description || null,
+        rating,
+        latitude,
+        longitude,
+        city_name: cityName || null,
+        country_code: countryCode || null,
+        country_name: countryName || null,
+        photo_url: photoUrl,
+        visited_at: visitedAt,
+      });
+ 
+    if (insertError) throw insertError;
+ 
+    navigate('/');
+  } catch (err: any) {
+    setError(err.message || 'Une erreur est survenue');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-900 pb-20">
@@ -200,13 +202,12 @@ export default function AddLebzPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Photo *
+                Photo
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoChange}
-                required
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
               />
               {photoPreview && (

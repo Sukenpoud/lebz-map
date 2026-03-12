@@ -63,11 +63,19 @@ export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2
         >
           <Popup maxWidth={300}>
             <div className="space-y-2">
-              <img
-                src={lebz.photo_url}
-                alt={lebz.title}
-                className="w-full h-40 object-cover rounded"
-              />
+              {lebz.photo_url ? (
+                <img
+                  src={lebz.photo_url}
+                  alt={lebz.title}
+                  className="w-full h-40 object-cover rounded"
+                />
+              ) : (
+                <img
+                  src="/lebz_placeholder.jpg"
+                  alt={lebz.title}
+                  className="w-full h-40 object-cover rounded"
+                />
+              )}
               <h3 className="font-bold text-lg">{lebz.title}</h3>
               {lebz.profile && (
                 <p className="text-sm text-gray-600">Par {lebz.profile.username}</p>

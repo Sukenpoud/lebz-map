@@ -24,7 +24,7 @@ export type Lebz = {
   city_name: string | null;
   country_code: string | null;
   country_name: string | null;
-  photo_url: string;
+  photo_url: string | null;
   title: string;
   description: string | null;
   rating: number;
