@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase, Lebz, Profile, ValidatedCountry } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import EditLebzModal from '../components/EditLebzModal';
+import DropdownMenu, { DropdownMenuItem } from '../components/DropdownMenu';
 
 export default function ProfilePage() {
   const { userId } = useParams();
@@ -10,8 +12,13 @@ export default function ProfilePage() {
   const [lebzList, setLebzList] = useState<Lebz[]>([]);
   const [validatedCountries, setValidatedCountries] = useState<ValidatedCountry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingLebz, setEditingLebz] = useState<Lebz | null>(null);
+  const [deletingLebz, setDeletingLebz] = useState<Lebz | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const targetUserId = userId || currentUser?.id;
+  const isOwnProfile = currentUser?.id === targetUserId;
 
   useEffect(() => {
     if (targetUserId) {
@@ -21,6 +28,7 @@ export default function ProfilePage() {
 
   const fetchProfileData = async () => {
     setLoading(true);
+    setError('');
 
     const [profileRes, lebzRes, countriesRes] = await Promise.all([
       supabase
@@ -44,6 +52,40 @@ export default function ProfilePage() {
     if (countriesRes.data) setValidatedCountries(countriesRes.data);
 
     setLoading(false);
+  };
+
+  const handleDeleteLebz = async () => {
+    if (!deletingLebz || !currentUser) return;
+
+    setActionLoading(true);
+    setError('');
+
+    try {
+      // Supprimer l'image si elle existe
+      if (deletingLebz.photo_url) {
+        const fileName = deletingLebz.photo_url.split('/').pop();
+        if (fileName) {
+          await supabase.storage
+            .from('lebz-photos')
+            .remove([`${currentUser.id}/${fileName}`]);
+        }
+      }
+
+      // Supprimer la lebz
+      const { error: deleteError } = await supabase
+        .from('lebz')
+        .delete()
+        .eq('id', deletingLebz.id);
+
+      if (deleteError) throw deleteError;
+
+      setDeletingLebz(null);
+      fetchProfileData(); // Rafraîchir les données
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la suppression');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -94,6 +136,12 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
         {validatedCountries.length > 0 && (
           <div className="bg-gray-800 rounded-xl p-6 mb-6">
             <h2 className="text-2xl font-bold text-white mb-4">Pays validés</h2>
@@ -116,7 +164,7 @@ export default function ProfilePage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {lebzList.map((lebz) => (
-              <div key={lebz.id} className="bg-gray-700 rounded-lg overflow-hidden">
+              <div key={lebz.id} className="bg-gray-700 rounded-lg overflow-hidden relative">
                 {lebz.photo_url ? (
                   <img
                     src={lebz.photo_url}
@@ -130,6 +178,42 @@ export default function ProfilePage() {
                     className="w-full h-48 object-cover"
                   />
                 )}
+                
+                {isOwnProfile && (
+                  <div className="absolute top-2 right-2">
+                    <DropdownMenu
+                      trigger={
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      }
+                    >
+                      <DropdownMenuItem
+                        onClick={() => setEditingLebz(lebz)}
+                        icon={
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        }
+                      >
+                        Modifier
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem
+                        onClick={() => setDeletingLebz(lebz)}
+                        icon={
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        }
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      >
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenu>
+                  </div>
+                )}
+                
                 <div className="p-4">
                   <h3 className="text-xl font-bold text-white mb-2">{lebz.title}</h3>
                   <div className="text-sm text-gray-300 space-y-1">
@@ -149,6 +233,46 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmation de suppression */}
+      {deletingLebz && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">Supprimer cette lebz ?</h3>
+            <p className="text-gray-300 mb-6">
+              Cette action est irréversible. La lebz "{deletingLebz.title}" sera définitivement supprimée.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setDeletingLebz(null)}
+                disabled={actionLoading}
+                className="flex-1 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteLebz}
+                disabled={actionLoading}
+                className="flex-1 py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal d'édition */}
+      {editingLebz && (
+        <EditLebzModal
+          lebz={editingLebz}
+          onClose={() => setEditingLebz(null)}
+          onSave={() => {
+            setEditingLebz(null);
+            fetchProfileData();
+          }}
+        />
+      )}
     </div>
   );
 }
