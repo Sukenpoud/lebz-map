@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { Icon, LatLng } from 'leaflet';
+import { Link } from 'react-router-dom';
 import { Lebz, getUserColor, isValidatingLebz, ValidatedCountry } from '../lib/supabase';
 import CountryLayer from './CountryLayer';
 import 'leaflet/dist/leaflet.css';
@@ -116,7 +117,7 @@ export default function Map({ lebzList, onLocationSelect, center = [46.2276, 2.2
                 
                 <h3 className="font-bold text-lg">{lebz.title}</h3>
                 {lebz.profile && (
-                  <p className="text-sm text-gray-600">Par <a href={`/profile/${lebz.profile.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">{lebz.profile.username}</a></p>
+                  <p className="text-sm text-gray-600">Par <Link to={`/profile/${lebz.profile.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">{lebz.profile.username}</Link></p>
                 )}
                 <div className="text-sm">
                   <p className="text-gray-700 mt-0">
