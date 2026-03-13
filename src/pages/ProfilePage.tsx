@@ -329,7 +329,7 @@ export default function ProfilePage() {
                       {lebz.country_name}
                     </p>
                     <p className="text-yellow-400">{renderStars(lebz.rating)}</p>
-                    <p>Visité le {new Date(lebz.visited_at).toLocaleDateString('fr-FR')}</p>
+                    <p>Soulagé le {new Date(lebz.visited_at).toLocaleDateString('fr-FR')}</p>
                     {lebz.description && (
                       <p className="text-gray-400 mt-2">{lebz.description}</p>
                     )}

@@ -80,8 +80,16 @@ export default function LeaderboardPage() {
                   {index + 1}
                 </div>
 
-                <div className="flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full text-white text-2xl font-bold">
-                  {stat.profile.username.charAt(0).toUpperCase()}
+                <div className="flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full text-white text-2xl font-bold overflow-hidden">
+                  {stat.profile.avatar_url ? (
+                      <img
+                        src={stat.profile.avatar_url}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      stat.profile.username.charAt(0).toUpperCase()
+                    )}
                 </div>
 
                 <div className="flex-1">
