@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase, Lebz, Profile, ValidatedCountry, isValidatingLebz, getCountryFlag } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import EditLebzModal from '../components/EditLebzModal';
+import EditProfileModal from '../components/EditProfileModal';
 import DropdownMenu, { DropdownMenuItem } from '../components/DropdownMenu';
 import Map from '../components/Map';
 
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editingLebz, setEditingLebz] = useState<Lebz | null>(null);
   const [deletingLebz, setDeletingLebz] = useState<Lebz | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -105,6 +107,14 @@ export default function ProfilePage() {
     await signOut();
   };
 
+  const handleProfileSave = async () => {
+    setEditingProfile(false);
+    // Recharger les données du profil pour afficher les changements
+    if (targetUserId) {
+      fetchProfileData();
+    }
+  };
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -119,8 +129,16 @@ export default function ProfilePage() {
         <div className="bg-gray-800 rounded-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                {profile.username.charAt(0).toUpperCase()}
+              <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  profile.username.charAt(0).toUpperCase()
+                )}
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">{profile.username}</h1>
@@ -130,15 +148,35 @@ export default function ProfilePage() {
               </div>
             </div>
             {isOwnProfile && (
-              <button
-                onClick={handleSignOut}
-                className="text-gray-400 hover:text-red-500 transition-colors p-2"
-                title="Déconnexion"
+              <DropdownMenu
+                trigger={
+                  <svg className="w-6 h-6 text-gray-400 hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                  </svg>
+                }
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
+                <DropdownMenuItem
+                  onClick={() => setEditingProfile(true)}
+                  icon={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  }
+                >
+                  Modifier le profil
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  icon={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  }
+                  className="text-red-400 hover:text-red-300"
+                >
+                  Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenu>
             )}
           </div>
 
@@ -313,6 +351,15 @@ export default function ProfilePage() {
             setEditingLebz(null);
             fetchProfileData();
           }}
+        />
+      )}
+
+      {/* Modal de modification du profil */}
+      {editingProfile && profile && (
+        <EditProfileModal
+          profile={profile}
+          onClose={() => setEditingProfile(false)}
+          onSave={handleProfileSave}
         />
       )}
     </div>

@@ -89,6 +89,25 @@ before update on public.lebz
 for each row
 execute function public.set_updated_at();
 
+-- Fonction pour mettre à jour updated_at automatiquement
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger sur la table profiles
+DROP TRIGGER IF EXISTS set_profiles_updated_at ON public.profiles;
+
+CREATE TRIGGER set_profiles_updated_at
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.set_updated_at();
+
 -- =========================
 -- AUTO-CREATE PROFILE
 -- =========================
