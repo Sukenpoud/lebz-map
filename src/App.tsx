@@ -78,7 +78,7 @@ function AppRoutes() {
         <Route
           path="/leaderboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute fullHeight={true}>
               <LeaderboardPage />
             </ProtectedRoute>
           }

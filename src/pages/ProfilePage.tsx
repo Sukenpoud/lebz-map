@@ -19,6 +19,10 @@ export default function ProfilePage() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalLebz, setTotalLebz] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const LEBS_PER_PAGE = 4;
 
   const targetUserId = userId || currentUser?.id;
   const isOwnProfile = currentUser?.id === targetUserId;
@@ -27,11 +31,25 @@ export default function ProfilePage() {
     if (targetUserId) {
       fetchProfileData();
     }
-  }, [targetUserId]);
+  }, [targetUserId, currentPage]);
 
   const fetchProfileData = async () => {
     setLoading(true);
     setError('');
+
+    // D'abord récupérer le nombre total de lebz
+    const { count } = await supabase
+      .from('lebz')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', targetUserId);
+
+    const total = count || 0;
+    const pages = Math.ceil(total / LEBS_PER_PAGE);
+    setTotalLebz(total);
+    setTotalPages(pages);
+
+    const from = (currentPage - 1) * LEBS_PER_PAGE;
+    const to = from + LEBS_PER_PAGE - 1;
 
     const [profileRes, lebzRes, countriesRes] = await Promise.all([
       supabase
@@ -43,7 +61,8 @@ export default function ProfilePage() {
         .from('lebz')
         .select('*')
         .eq('user_id', targetUserId)
-        .order('visited_at', { ascending: false }),
+        .order('visited_at', { ascending: false })
+        .range(from, to),
       supabase
         .from('validated_countries')
         .select('*')
@@ -64,28 +83,18 @@ export default function ProfilePage() {
     setError('');
 
     try {
-      // Supprimer l'image si elle existe
-      if (deletingLebz.photo_url) {
-        const fileName = deletingLebz.photo_url.split('/').pop();
-        if (fileName) {
-          await supabase.storage
-            .from('lebz-photos')
-            .remove([`${currentUser.id}/${fileName}`]);
-        }
-      }
-
-      // Supprimer la lebz
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('lebz')
         .delete()
         .eq('id', deletingLebz.id);
 
-      if (deleteError) throw deleteError;
+      if (error) throw error;
 
       setDeletingLebz(null);
-      fetchProfileData(); // Rafraîchir les données
+      // Recharger les données de la page courante
+      fetchProfileData();
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la suppression');
+      setError(err.message || 'Une erreur est survenue lors de la suppression');
     } finally {
       setActionLoading(false);
     }
@@ -115,6 +124,24 @@ export default function ProfilePage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -124,7 +151,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 pb-20">
+    <div className="min-h-screen bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-gray-800 rounded-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -311,6 +338,49 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
+
+          {/* Contrôles de pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-400">
+                Page {currentPage} sur {totalPages} ({totalLebz} lebz{totalLebz > 1 ? 's' : ''})
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-50 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+                >
+                  Précédent
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-8 h-8 rounded-lg transition-colors ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-50 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

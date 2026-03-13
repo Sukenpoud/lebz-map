@@ -25,7 +25,7 @@ export default function Layout({ children, fullHeight = false }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header />
-      <main className="pb-20 md:pb-0">
+      <main className="md:pb-0 flex-1">
         {children}
       </main>
       <Footer />
