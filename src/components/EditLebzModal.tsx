@@ -145,7 +145,33 @@ export default function EditLebzModal({ lebz, onClose, onSave }: EditLebzModalPr
         // Gérer la photo
         if (photo) {
         console.log('Cas: nouvelle photo uploadée');
-        // ... code existant
+        
+        // Supprimer l'ancienne photo si elle existe
+        if (lebz.photo_url) {
+            const oldFileName = lebz.photo_url.split('/').pop();
+            if (oldFileName) {
+                await supabase.storage
+                    .from('lebz-photos')
+                    .remove([`${user.id}/${oldFileName}`]);
+            }
+        }
+        
+        // Uploader la nouvelle photo
+        const fileExt = photo.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('lebz-photos')
+            .upload(fileName, photo);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('lebz-photos')
+            .getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+        console.log('Nouvelle photoUrl:', photoUrl);
         } else if (removePhoto && lebz.photo_url) {
         console.log('Cas: suppression de photo existante');
         console.log('URL à supprimer:', lebz.photo_url);
